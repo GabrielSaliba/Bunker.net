@@ -4,7 +4,10 @@ var weather = require('openweather-apis');
 var moment = require('moment');
 
 const app = express();
+
 weather.setLang('pt');
+moment.locale('pt-br');
+
 
 app.get("/", (request, response) => {
   const ping = new Date();
@@ -21,10 +24,10 @@ const config = require("./config.json"); //Pegando o prefixo do bot para respost
 let channels = []
 let warningCodes = [500, 501, 502, 503, 504, 511, 520, 521, 522, 531]
 let dangerCodes = [200, 201, 202, 210, 211, 212, 221, 230, 231, 232]
-let scheduleCooldown = moment.utc().add(1, 'hour')
-let timeCooldown = moment.utc()
-let startTime = moment.utc()
-let morningMessageCooldown = moment.utc()
+let scheduleCooldown = moment().add(30, 'seconds')
+let timeCooldown = moment()
+let startTime = moment()
+let morningMessageCooldown = moment()
 
 client.login(process.env.TOKEN);
 
@@ -77,7 +80,7 @@ client.on('message', message => {
       message.channel.send("Canal não adicionado à Bunker.net!")
     } else {
       getCurrentWeather(message)
-      timeCooldown = moment().add(2, 'hours')
+      timeCooldown = moment().add(1, 'hours')
     }
   }
 })
@@ -85,6 +88,12 @@ client.on('message', message => {
 client.on('message', message => {
    if (message.content == config.prefix + ' sobre') {
      message.channel.send(`Bunker.net v${process.env.VERSION} \nTempo de serviço ativo: ${startTime.fromNow()} \n${process.env.GITHUB}`)
+   }
+})
+
+client.on('message', message => {
+   if (message.content == config.prefix + ' cooldown') {
+     message.channel.send(`Cooldown Mensagem Programada: ${moment(scheduleCooldown).subtract(3, 'hours').calendar()} \nCooldown Mensagem Usuário: ${moment(timeCooldown).subtract(3, 'hours').calendar()}`)
    }
 })
 
@@ -142,7 +151,7 @@ function scheduledWeatherMonitoring() {
           }
 
           channel.send(`Previsão de clima recente: ${capitalize(smart.description)} \nTemperatura atual: ${smart.temp} ºC \nUmidade do ar: ${smart.humidity}% \nLeve em consideração que as informações exibidas são apenas previsões para lhe ajudar, e nem sempre representam a realidade \nObrigado por usar os serviçoes da Bunker.net`)
-          scheduleCooldown = moment().add(4, 'hours')
+          scheduleCooldown = moment().add(2, 'hours')
         }
       })
     })
