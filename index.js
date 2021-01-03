@@ -24,6 +24,7 @@ let dangerCodes = [200, 201, 202, 210, 211, 212, 221, 230, 231, 232]
 let scheduleCooldown = moment.utc().add(1, 'hour')
 let timeCooldown = moment.utc()
 let startTime = moment.utc()
+let morningMessageCooldown = moment.utc()
 
 client.login(process.env.TOKEN);
 
@@ -52,7 +53,8 @@ client.on('message', message => {
       message.channel.send("Canal não presente na Bunker.net")
       return
     }
-    channels.pop(message.channel.id)
+
+    channels.splice(channels.indexOf(message.channel.id), 1)
     message.channel.send("Canal removido da Bunker.net.")
   }
 });
@@ -90,14 +92,18 @@ var job = schedule.scheduleJob('*/20 * * * * *', function(){
     scheduledWeatherMonitoring()
   });
 
-var startDayJob = schedule.scheduleJob('* * 10 * * *', function(){
-    channels.forEach(item => {
-      const channel = client.channels.cache.find(channel => channel.id === item)
-      channel.send("Bom dia!")
-      weather.getSmartJSON(function(err, smart) {
-      channel.send(`Previsão de clima recente: ${capitalize(smart.description)} \nTemperatura atual: ${smart.temp} ºC \nUmidade do ar: ${smart.humidity}% \nServiços Bunker.net em execução monitorando o clima.`)
-    });
-  })
+var startDayJob = schedule.scheduleJob({hour: 13}, function(){
+    if(moment() > morningMessageCooldown) {
+      channels.forEach(item => {
+        const channel = client.channels.cache.find(channel => channel.id === item)
+        channel.send("Bom dia!")
+        weather.getSmartJSON(function(err, smart) {
+        channel.send(`Previsão de clima recente: ${capitalize(smart.description)} \nTemperatura atual: ${smart.temp} ºC \nUmidade do ar: ${smart.humidity}% \nServiços Bunker.net em execução monitorando o clima.`)
+      });
+      morningMessageCooldown = moment().add(12, 'hours')
+    
+    })
+  }
 });
 
 function initializeWeatherApi() {
@@ -117,7 +123,7 @@ function getCurrentWeather(message) {
         message.channel.send("PERIGO!!!")
       }
 
-      message.reply(`Previsão de clima recente: ${capitalize(smart.description)} \nTemperatura atual: ${smart.temp} ºC \nUmidade do ar: ${smart.humidity}% \nLeve em consideração que as informações exibidas são apenas previsões para lhe ajudar, e nem sempre representam a realidade \nObrigado por usar os serviçoes da Bunker.net`)
+      message.reply(`Previsão de clima recente: ${smart.description} \nTemperatura atual: ${smart.temp} ºC \nUmidade do ar: ${smart.humidity}% \nLeve em consideração que as informações exibidas são apenas previsões para lhe ajudar, e nem sempre representam a realidade \nObrigado por usar os serviçoes da Bunker.net`)
   });
 }
 
