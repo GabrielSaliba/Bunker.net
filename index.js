@@ -76,12 +76,8 @@ client.on('message', message => {
 
 client.on('message', message => {
   if (message.content == config.prefix + ' previsão') {
-    if(!channels.includes(message.channel.id)) {
-      message.channel.send("Canal não adicionado à Bunker.net!")
-    } else {
-      getCurrentWeather(message)
-      timeCooldown = moment().add(1, 'hours')
-    }
+    getCurrentWeather(message)
+    timeCooldown = moment().add(1, 'hours')
   }
 })
 
@@ -110,17 +106,9 @@ var startDayJob = schedule.scheduleJob({hour: 13}, function(){
         channel.send(`Previsão de clima recente: ${capitalize(smart.description)} \nTemperatura atual: ${smart.temp} ºC \nUmidade do ar: ${smart.humidity}% \nServiços Bunker.net em execução monitorando o clima.`)
       });
       morningMessageCooldown = moment().add(12, 'hours')
-    
     })
   }
 });
-
-function initializeWeatherApi() {
-  weather.setCity('Betim');
-  weather.setUnits('metric');
-  weather.setAPPID(process.env.WEATHER_TOKEN);
-  console.log("API de Clima inicializada.")
-}
 
 function getCurrentWeather(message) {
   weather.getSmartJSON(function(err, smart){
@@ -151,13 +139,20 @@ function scheduledWeatherMonitoring() {
           }
 
           channel.send(`Previsão de clima recente: ${capitalize(smart.description)} \nTemperatura atual: ${smart.temp} ºC \nUmidade do ar: ${smart.humidity}% \nLeve em consideração que as informações exibidas são apenas previsões para lhe ajudar, e nem sempre representam a realidade \nObrigado por usar os serviçoes da Bunker.net`)
-          scheduleCooldown = moment().add(2, 'hours')
         }
       })
     })
+    scheduleCooldown = moment().add(2, 'hours')
   }
 }
 
 function capitalize(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+function initializeWeatherApi() {
+  weather.setCity('Betim');
+  weather.setUnits('metric');
+  weather.setAPPID(process.env.WEATHER_API_TOKEN);
+  console.log("API de Clima inicializada.")
 }
